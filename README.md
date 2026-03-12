@@ -16,6 +16,29 @@ A modular ML engine that classifies network traffic as **Normal, DoS, Probe, R2L
 | Decision Tree | 99.95% |
 | **Random Forest** | **99.96%** |
 
+### The U2R Challenge
+
+U2R (User to Root) is the hardest attack class in network intrusion detection. It represents privilege escalation attacks where an attacker gains root/admin access — and it's extremely rare:
+
+| Class | Samples in dataset |
+|---|---|
+| DoS | 391,458 |
+| Normal | 97,278 |
+| Probe | 4,107 |
+| R2L | 1,126 |
+| **U2R** | **52** |
+
+This extreme class imbalance means most traditional ML approaches achieve only **40–60% recall on U2R**. By training on the full KDD Cup 99 dataset (494K records) rather than the commonly used 10% subset, I achieved **80% recall on U2R** — meaningfully better than the typical baseline.
+```
+              precision    recall  f1-score   support
+
+         DoS       1.00      1.00      1.00     78292
+      Normal       1.00      1.00      1.00     19456
+       Probe       0.97      0.98      0.97       822
+         R2L       0.98      0.97      0.98       225
+         U2R       1.00      0.80      0.89        10
+```
+
 ---
 
 ## Quickstart
