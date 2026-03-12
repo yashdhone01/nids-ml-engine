@@ -1,4 +1,3 @@
-# src/predict.py — cleaner version
 import joblib
 import numpy as np
 import os
@@ -20,11 +19,13 @@ class NIDSEngine:
         result = engine.predict({'src_bytes': 491, 'dst_bytes': 0, ...})
     """
 
-    def __init__(self, model_path='models/rf_model.pkl',
+    def __init__(self,
+                 model_path='models/rf_model.pkl',
                  scaler_path='models/scaler.pkl'):
         if not os.path.exists(model_path):
             raise FileNotFoundError(
-                f"Model not found at {model_path}. Run: python -m src.train"
+                f"Model not found at '{model_path}'.\n"
+                f"Run: python -m src.train"
             )
         self.model  = joblib.load(model_path)
         self.scaler = joblib.load(scaler_path)
@@ -33,20 +34,15 @@ class NIDSEngine:
         """
         Predict traffic category from a dict of feature values.
         Missing features default to 0.
-
-        Returns:
-            dict with keys: prediction, confidence, status, features_used
         """
         features = [input_dict.get(f, 0) for f in FEATURES]
         X = self.scaler.transform([features])
         prediction = self.model.predict(X)[0]
         confidence = self.model.predict_proba(X)[0].max()
-
         return {
             'prediction': prediction,
             'confidence': round(float(confidence), 4),
-            'status':     'alert' if prediction != 'Normal' else 'normal',
-            'features_used': FEATURES
+            'status':     'alert' if prediction != 'Normal' else 'normal'
         }
 
     def predict_batch(self, records: list) -> list:

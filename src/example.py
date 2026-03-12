@@ -1,9 +1,6 @@
-# example.py
-# Quick example showing how to use the NIDS engine
-# Run: python example.py
+from src.predict import NIDSEngine
 
-from src.engine import NIDSEngine
-
+# Load the engine (must run python -m src.train first)
 engine = NIDSEngine()
 
 # Single prediction
@@ -24,14 +21,14 @@ result = engine.predict({
     'count': 2,
     'srv_count': 2
 })
-print("Single prediction:", result)
+print("Single:", result)
 
 # Batch prediction
 batch = [
-    {'src_bytes': 491, 'dst_bytes': 0},    # likely DoS
-    {'src_bytes': 0,   'dst_bytes': 1000},  # likely Normal
+    {'src_bytes': 491, 'dst_bytes': 0},
+    {'src_bytes': 0,   'dst_bytes': 1000},
 ]
 results = engine.predict_batch(batch)
-print("\nBatch predictions:")
+print("\nBatch:")
 for r in results:
     print(f"  {r['prediction']} ({r['confidence']*100:.1f}%) → {r['status']}")
