@@ -5,11 +5,18 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 import joblib
 import os
 
-TOP_15_FEATURES = [
+# Expanded from 15 → 19 features.
+# Added 4 host-based rate features that are critical for
+# separating Probe from DoS and R2L from Normal.
+TOP_FEATURES = [
+    # Original 15
     'duration', 'protocol_type', 'service', 'flag',
     'src_bytes', 'dst_bytes', 'land', 'wrong_fragment',
     'urgent', 'hot', 'num_failed_logins', 'logged_in',
-    'num_compromised', 'count', 'srv_count'
+    'num_compromised', 'count', 'srv_count',
+    # Added: host-based rates (already computed by features.py)
+    'dst_host_count', 'dst_host_srv_count',
+    'dst_host_diff_srv_rate', 'dst_host_rerror_rate',
 ]
 
 LABEL_MAP = {
@@ -25,9 +32,11 @@ LABEL_MAP = {
     'perl.': 'U2R', 'rootkit.': 'U2R'
 }
 
+CATEGORICAL_COLS = ['protocol_type', 'service', 'flag']
+
+
 def load_and_preprocess():
     print("Fetching KDD Cup 99 dataset...")
-    # percent10=True fetches 10% subset — still 494K records, much faster
     data = fetch_kddcup99(subset=None, shuffle=True,
                           random_state=42, percent10=True)
 
@@ -37,17 +46,27 @@ def load_and_preprocess():
     df['attack_category'] = df['label'].map(LABEL_MAP)
     df = df.dropna(subset=['attack_category'])
 
-    for col in ['protocol_type', 'service', 'flag']:
+    for col in CATEGORICAL_COLS:
+        if hasattr(df[col].iloc[0], 'decode'):
+            df[col] = df[col].str.decode('utf-8')
+
+    label_encoders = {}
+    os.makedirs('models', exist_ok=True)
+
+    for col in CATEGORICAL_COLS:
         le = LabelEncoder()
         df[col] = le.fit_transform(df[col])
+        label_encoders[col] = le
+        print(f"  {col} classes: {list(le.classes_)}")
 
-    X = df[TOP_15_FEATURES].fillna(0)
+    joblib.dump(label_encoders, 'models/label_encoders.pkl')
+    print("Label encoders saved to models/label_encoders.pkl")
+
+    X = df[TOP_FEATURES].fillna(0)
     y = df['attack_category']
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
-
-    os.makedirs('models', exist_ok=True)
     joblib.dump(scaler, 'models/scaler.pkl')
 
     print(f"Dataset shape: {X_scaled.shape}")
