@@ -60,21 +60,6 @@ The system is **stateful**. A single isolated packet cannot be reliably classifi
 
 ## Detection
 
-| Category | Examples | Key Signal |
-|----------|----------|------------|
-| **DoS** | neptune, smurf, teardrop | `count` > 200, `serror_rate` ≈ 1.0 |
-| **Probe** | portsweep, nmap, satan | `diff_srv_rate` ≈ 1.0, `rerror_rate` ≈ 1.0 |
-| **R2L** | guess_passwd, warezclient | isolated connection, large `dst_bytes` |
-| **U2R** | buffer_overflow, rootkit | rare, low-volume, elevated privilege signals |
-
-### Model performance
-
-| Model | Accuracy |
-|-------|----------|
-| Logistic Regression | 81.74% |
-| Decision Tree | 99.89% |
-| **Random Forest** | **99.93%** |
-
 Trained on KDD Cup 99 (494K records). U2R recall is **80%** — most implementations score 40–60% due to class imbalance (52 U2R samples vs 391K DoS). Fixed with SMOTE-style class weighting.
 
 ### Why 19 features, not 41?
@@ -127,10 +112,6 @@ NIDS_INTERFACE=eth0 docker compose -f docker-compose.live.yml up --build
 The dashboard connects over WebSocket and updates in real time:
 
 - **Live alert feed** — severity-coded rows (red=DoS, magenta=U2R, yellow=Probe)
-- **Attack breakdown** — animated bar chart per category
-- **Throughput sparkline** — flows/second over time
-- **Top sources** — ranked attacker IPs by alert count
-- **Stats** — total flows analyzed, per-category counts, uptime
 
 All data is streamed as NDJSON. The `/api/alerts` endpoint serves the last 500 alerts for any external tooling (Splunk, ELK, Grafana).
 
